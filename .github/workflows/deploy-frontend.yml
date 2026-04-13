@@ -25,25 +25,12 @@ jobs:
         run: npm install --global vercel@latest
 
       - name: Pull Vercel Environment
-        run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            vercel pull --yes --environment=preview
-          else
-            vercel pull --yes --environment=production
-          fi
-
-      - name: Build Project
-        run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            vercel build
-          else
-            vercel build --prod
-          fi
+        run: vercel pull --yes --environment=production
 
       - name: Deploy to Vercel
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            vercel deploy --prebuilt
+            vercel deploy
           else
-            vercel deploy --prebuilt --prod
+            vercel deploy --prod
           fi

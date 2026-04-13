@@ -1,12 +1,13 @@
 import json
 from typing import Optional
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel
 
 from services.agent_service import DocumentAgentService
 from services.pdf_service import markdown_to_pdf
+from services.storage_service import save_document
 
 router = APIRouter()
 
@@ -18,6 +19,15 @@ class GenerateRequest(BaseModel):
     style: Optional[str] = "professional"
     additional_instructions: Optional[str] = None
     reference_content: Optional[str] = None  # extracted text from uploaded file
+
+
+class SaveRequest(BaseModel):
+    title: str
+    document_type: str
+    topic: str
+    style: Optional[str] = "professional"
+    content: str
+    user_id: Optional[str] = None
 
 
 class PdfRequest(BaseModel):
@@ -64,6 +74,23 @@ async def generate_document_stream(request: GenerateRequest):
             "Connection": "keep-alive",
         },
     )
+
+
+@router.post("/save")
+def save_document_endpoint(request: SaveRequest):
+    """Save generated markdown to Supabase Storage and record metadata in the DB."""
+    try:
+        record = save_document(
+            title=request.title,
+            document_type=request.document_type,
+            topic=request.topic,
+            style=request.style or "professional",
+            content=request.content,
+            user_id=request.user_id,
+        )
+        return record
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
 
 
 @router.post("/pdf")
