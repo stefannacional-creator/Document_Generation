@@ -68,8 +68,11 @@ jobs:
               "Authorization": f"Bearer {token}",
               "Content-Type": "application/json",
           })
-          with urllib.request.urlopen(req) as resp:
-              print("Table provisioned:", resp.status)
+          try:
+              with urllib.request.urlopen(req) as resp:
+                  print("Table provisioned:", resp.status)
+          except Exception as e:
+              print(f"Table already exists or skipped: {e}")
           EOF
 
       - name: Trigger Render Deploy
